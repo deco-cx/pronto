@@ -15,113 +15,15 @@ import { eq } from "drizzle-orm";
 import type { Env } from "../main.ts";
 import { getDb } from "../db.ts";
 import { ideas } from "../schema.ts";
+import { 
+  getCompleteExpansionSchema, 
+  getSchemaForSection, 
+  getExternalToolsPrompt, 
+  getMainExpansionPrompt 
+} from "../defaultSchemas.ts";
 
-// Inline expansion schema
-const expansionSchema = {
-  type: 'object',
-  properties: {
-    title: {
-      type: 'string',
-      description: 'A clear, compelling title for the software idea. Example: "Sistema de Pesquisa Eleitoral"'
-    },
-    description: {
-      type: 'string',
-      description: 'Detailed description of what the software does. Example: "Uma aplicação para simular comportamento eleitoral através da criação de perfis demográficos e aplicação de questionários com respostas geradas por IA."'
-    },
-    features: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          title: { type: 'string' },
-          description: { type: 'string' }
-        },
-        required: ['title', 'description']
-      },
-      description: 'Main features of the application. Example: [{"title": "Gestão de Eleitores", "description": "Criar e gerenciar perfis demográficos detalhados"}]'
-    },
-    architecture: {
-      type: 'object',
-      properties: {
-        files: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              path: { type: 'string' },
-              description: { type: 'string' }
-            },
-            required: ['path', 'description']
-          }
-        }
-      },
-      description: 'Project file structure following Deco MCP template patterns'
-    },
-    dataModels: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          title: { type: 'string' },
-          schema: { type: 'string' }
-        },
-        required: ['title', 'schema']
-      },
-      description: 'Database entities with Drizzle ORM schemas'
-    },
-    tools: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          title: { type: 'string' },
-          description: { type: 'string' },
-          inputSchema: { type: 'string' },
-          outputSchema: { type: 'string' }
-        },
-        required: ['title', 'description', 'inputSchema', 'outputSchema']
-      },
-      description: 'MCP tools for the application with Zod schemas'
-    },
-    views: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          title: { type: 'string' },
-          pathTemplate: { type: 'string' },
-          description: { type: 'string' },
-          layoutExample: { type: 'string' }
-        },
-        required: ['title', 'pathTemplate', 'description', 'layoutExample']
-      },
-      description: 'Frontend routes with SVG layout examples'
-    },
-    implementationPhases: {
-      type: 'array',
-      items: {
-        type: 'object',
-        properties: {
-          title: { type: 'string' },
-          description: { type: 'string' },
-          duration: { type: 'string' },
-          tasks: {
-            type: 'array',
-            items: { type: 'string' }
-          }
-        },
-        required: ['title', 'description', 'duration', 'tasks']
-      },
-      description: 'Implementation phases with realistic timelines'
-    },
-    successMetrics: {
-      type: 'array',
-      items: { type: 'string' },
-      description: 'Measurable success criteria for the project'
-    }
-  },
-  required: ['title', 'description', 'features', 'architecture', 'dataModels', 'tools', 'views', 'implementationPhases', 'successMetrics']
-};
+// Get expansion schema from centralized definitions
+// This can now be overridden at runtime for editing purposes
 
 // Inline EXPAND_IDEA tool
 const createInlineExpandIdeaTool = (env: Env) =>
@@ -139,20 +41,15 @@ const createInlineExpandIdeaTool = (env: Env) =>
     }),
     execute: async ({ context }) => {
       try {
-        const prompt = `You are an expert software architect and product manager specializing in the Deco MCP platform. 
-
-Your task is to transform this simple software idea into a comprehensive, detailed development plan:
-
-"${context.originalPrompt}"
-
-Create a complete plan that follows Deco MCP platform patterns and best practices.`;
+        const prompt = getMainExpansionPrompt(context.originalPrompt);
+        const schema = getCompleteExpansionSchema();
 
         const result = await env.DECO_CHAT_WORKSPACE_API.AI_GENERATE_OBJECT({
           messages: [{
             role: 'user',
             content: prompt
           }],
-          schema: expansionSchema
+          schema
         });
 
         if (!result.object) {
@@ -185,34 +82,13 @@ const createInlineSuggestExternalToolsTool = (env: Env) =>
     }),
     execute: async ({ context }) => {
       try {
-        const prompt = `Based on this expanded software idea, suggest 3-5 relevant external tools and integrations that would enhance the application:
-
-${JSON.stringify(context.expandedIdea, null, 2)}
-
-For each suggested tool, provide:
-- service: The service name (e.g., "GitHub", "Slack", "Stripe")
-- toolName: The specific API or tool name
-- description: What the tool does
-- useCase: How it would be used in this specific application
-
-Focus on tools that would genuinely add value to this particular idea.`;
-
+        const prompt = getExternalToolsPrompt(context.expandedIdea);
+        const toolsSchema = getSchemaForSection('toolsFromOtherApps');
+        
         const schema = {
           type: 'object',
           properties: {
-            toolsFromOtherApps: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  service: { type: 'string' },
-                  toolName: { type: 'string' },
-                  description: { type: 'string' },
-                  useCase: { type: 'string' }
-                },
-                required: ['service', 'toolName', 'description', 'useCase']
-              }
-            }
+            toolsFromOtherApps: toolsSchema
           },
           required: ['toolsFromOtherApps']
         };

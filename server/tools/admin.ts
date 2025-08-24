@@ -11,6 +11,8 @@ import type { Env } from "../main.ts";
 import { getDb } from "../db.ts";
 import { schemaConfigs, schemaFields, ideas } from "../schema.ts";
 import { v4 as uuidv4 } from "uuid";
+import { getSchemaForSection, defaultSchemas } from "../defaultSchemas.ts";
+import { validateSchema, wrapSectionSchema, extractSectionData, createSectionPrompt } from "../schemaUtils.ts";
 
 export const createGetSchemaConfigsTool = (env: Env) =>
   createTool({
@@ -330,113 +332,8 @@ export const createGetSectionSchemaTool = (env: Env) =>
     }),
     execute: async ({ context }) => {
       try {
-        // Map section keys to their schema descriptions
-        const sectionSchemas: Record<string, any> = {
-          title: {
-            type: 'string',
-            description: 'A clear, compelling title for the software idea. Example: "Sistema de Pesquisa Eleitoral"'
-          },
-          description: {
-            type: 'string',
-            description: 'Detailed description of what the software does. Example: "Uma aplicação para simular comportamento eleitoral através da criação de perfis demográficos e aplicação de questionários com respostas geradas por IA."'
-          },
-          features: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                title: { type: 'string' },
-                description: { type: 'string' }
-              },
-              required: ['title', 'description']
-            },
-            description: 'Main features of the application. Example: [{"title": "Gestão de Eleitores", "description": "Criar e gerenciar perfis demográficos detalhados"}]'
-          },
-          architecture: {
-            type: 'object',
-            properties: {
-              files: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    path: { type: 'string' },
-                    description: { type: 'string' }
-                  },
-                  required: ['path', 'description']
-                }
-              }
-            },
-            description: 'Project file structure following Deco MCP template patterns'
-          },
-          dataModels: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                title: { type: 'string' },
-                schema: { type: 'string' }
-              },
-              required: ['title', 'schema']
-            },
-            description: 'Database entities with Drizzle ORM schemas'
-          },
-          tools: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                title: { type: 'string' },
-                description: { type: 'string' },
-                inputSchema: { type: 'string' },
-                outputSchema: { type: 'string' }
-              },
-              required: ['title', 'description', 'inputSchema', 'outputSchema']
-            },
-            description: 'MCP tools for the application with Zod schemas'
-          },
-          views: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                title: { type: 'string' },
-                pathTemplate: { type: 'string' },
-                description: { type: 'string' },
-                layoutExample: { type: 'string' }
-              },
-              required: ['title', 'pathTemplate', 'description', 'layoutExample']
-            },
-            description: 'Frontend routes with SVG layout examples'
-          },
-          implementationPhases: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                title: { type: 'string' },
-                description: { type: 'string' },
-                duration: { type: 'string' },
-                tasks: {
-                  type: 'array',
-                  items: { type: 'string' }
-                }
-              },
-              required: ['title', 'description', 'duration', 'tasks']
-            },
-            description: 'Implementation phases with realistic timelines'
-          },
-          successMetrics: {
-            type: 'array',
-            items: { type: 'string' },
-            description: 'Measurable success criteria for the project'
-          }
-        };
-
-        const schema = sectionSchemas[context.sectionKey];
-        if (!schema) {
-          throw new Error(`Unknown section key: ${context.sectionKey}`);
-        }
+        // Get schema from centralized definitions
+        const schema = getSchemaForSection(context.sectionKey);
 
         return {
           sectionKey: context.sectionKey,
@@ -498,18 +395,16 @@ export const createReExpandSectionTool = (env: Env) =>
           promptDescription = context.customPrompt;
         }
 
-        // Create AI prompt for this specific section
-        const prompt = `You are an expert software architect and product manager specializing in the Deco MCP platform.
+        // Create AI prompt using utility
+        const prompt = createSectionPrompt(
+          context.sectionKey,
+          context.originalPrompt,
+          currentData,
+          promptDescription
+        );
 
-Your task is to generate ONLY the "${context.sectionKey}" section for this software idea:
-
-Original Idea: "${context.originalPrompt}"
-
-Current Context: ${JSON.stringify(currentData, null, 2)}
-
-Section Requirements: ${promptDescription}
-
-Generate ONLY the ${context.sectionKey} data that matches this exact schema structure. Do not include any other sections or wrapper objects.`;
+        // Wrap the section schema using utility
+        const wrappedSchema = wrapSectionSchema(context.sectionKey, sectionSchema);
 
         // Use AI to generate the new section data
         const result = await env.DECO_CHAT_WORKSPACE_API.AI_GENERATE_OBJECT({
@@ -517,14 +412,15 @@ Generate ONLY the ${context.sectionKey} data that matches this exact schema stru
             role: 'user',
             content: prompt
           }],
-          schema: sectionSchema
+          schema: wrappedSchema
         });
 
         if (!result.object) {
           throw new Error("AI did not return section data");
         }
 
-        const newSectionData = result.object;
+        // Extract the section data using utility
+        const newSectionData = extractSectionData(result.object, context.sectionKey);
 
         return {
           sectionKey: context.sectionKey,
@@ -693,6 +589,246 @@ export const createUpdateEvaluationCriteriaTool = (env: Env) =>
     },
   });
 
+export const createGetEditableSectionTool = (env: Env) =>
+  createTool({
+    id: "GET_EDITABLE_SECTION",
+    description: "Get section data and schema for editing with enhanced information",
+    inputSchema: z.object({
+      ideaId: z.string(),
+      sectionKey: z.string(),
+    }),
+    outputSchema: z.object({
+      currentData: z.any(),
+      currentSchema: z.any(),
+      defaultSchema: z.any(),
+      sectionKey: z.string(),
+      success: z.boolean(),
+    }),
+    execute: async ({ context }) => {
+      const db = await getDb(env);
+      
+      try {
+        // Get current idea data
+        const existingIdea = await db.select()
+          .from(ideas)
+          .where(eq(ideas.id, context.ideaId))
+          .limit(1);
+
+        if (existingIdea.length === 0) {
+          throw new Error("Idea not found");
+        }
+
+        const currentData = existingIdea[0].expandedData;
+        const sectionData = currentData?.[context.sectionKey];
+
+        // Get current schema (could be customized in the future)
+        const currentSchema = getSchemaForSection(context.sectionKey);
+        
+        // Get default schema for comparison
+        const defaultSchema = getSchemaForSection(context.sectionKey);
+
+        return {
+          currentData: sectionData,
+          currentSchema,
+          defaultSchema,
+          sectionKey: context.sectionKey,
+          success: true,
+        };
+      } catch (error) {
+        console.error("Failed to get editable section:", error);
+        throw new Error("Failed to get editable section");
+      }
+    },
+  });
+
+export const createPreviewSectionWithSchemaTool = (env: Env) =>
+  createTool({
+    id: "PREVIEW_SECTION_WITH_SCHEMA",
+    description: "Preview section changes with custom schema without saving to database",
+    inputSchema: z.object({
+      ideaId: z.string(),
+      sectionKey: z.string(),
+      schemaOverride: z.any().optional(), // Custom schema for this preview
+      customPrompt: z.string().optional(), // Custom prompt override
+      originalPrompt: z.string(), // Original idea prompt for context
+    }),
+    outputSchema: z.object({
+      previewData: z.any(),
+      schemaUsed: z.any(),
+      success: z.boolean(),
+    }),
+    execute: async ({ context }) => {
+      const db = await getDb(env);
+      
+      try {
+        // Get current idea data for context
+        const existingIdea = await db.select()
+          .from(ideas)
+          .where(eq(ideas.id, context.ideaId))
+          .limit(1);
+
+        if (existingIdea.length === 0) {
+          throw new Error("Idea not found");
+        }
+
+        const currentData = existingIdea[0].expandedData;
+
+        // Get schema (use override if provided, otherwise default)
+        let sectionSchema;
+        if (context.schemaOverride) {
+          sectionSchema = context.schemaOverride;
+          
+          // Validate the custom schema
+          const validation = validateSchema(sectionSchema);
+          if (!validation.valid) {
+            throw new Error(`Invalid schema: ${validation.errors.join(', ')}`);
+          }
+        } else {
+          sectionSchema = getSchemaForSection(context.sectionKey);
+        }
+
+        // Determine prompt description
+        let promptDescription = sectionSchema.description;
+        if (context.customPrompt) {
+          promptDescription = context.customPrompt;
+        }
+
+        // Create AI prompt using utility
+        const prompt = createSectionPrompt(
+          context.sectionKey,
+          context.originalPrompt,
+          currentData,
+          promptDescription
+        );
+
+        // Wrap the section schema using utility
+        const wrappedSchema = wrapSectionSchema(context.sectionKey, sectionSchema);
+
+        // Use AI to generate the preview data
+        const result = await env.DECO_CHAT_WORKSPACE_API.AI_GENERATE_OBJECT({
+          messages: [{
+            role: 'user',
+            content: prompt
+          }],
+          schema: wrappedSchema
+        });
+
+        if (!result.object) {
+          throw new Error("AI did not return section data");
+        }
+
+        // Extract the section data using utility
+        const sectionData = extractSectionData(result.object, context.sectionKey);
+
+        return {
+          previewData: sectionData,
+          schemaUsed: sectionSchema,
+          success: true,
+        };
+      } catch (error) {
+        console.error("Failed to preview section with schema:", error);
+        throw new Error("Failed to preview section with schema");
+      }
+    },
+  });
+
+export const createApplySectionChangesTool = (env: Env) =>
+  createTool({
+    id: "APPLY_SECTION_CHANGES",
+    description: "Apply previewed section changes to the database",
+    inputSchema: z.object({
+      ideaId: z.string(),
+      sectionKey: z.string(),
+      newData: z.any(),
+    }),
+    outputSchema: z.object({
+      success: z.boolean(),
+      updatedIdea: z.any(),
+    }),
+    execute: async ({ context }) => {
+      const db = await getDb(env);
+      
+      try {
+        // Get current idea
+        const existingIdea = await db.select()
+          .from(ideas)
+          .where(eq(ideas.id, context.ideaId))
+          .limit(1);
+
+        if (existingIdea.length === 0) {
+          throw new Error("Idea not found");
+        }
+
+        const currentData = existingIdea[0].expandedData || {};
+        
+        // Update the specific section
+        const updatedData = {
+          ...currentData,
+          [context.sectionKey]: context.newData
+        };
+
+        // Save to database
+        const updated = await db.update(ideas)
+          .set({ 
+            expandedData: updatedData,
+            updatedAt: new Date()
+          })
+          .where(eq(ideas.id, context.ideaId))
+          .returning();
+
+        return {
+          success: true,
+          updatedIdea: updated[0],
+        };
+      } catch (error) {
+        console.error("Failed to apply section changes:", error);
+        throw new Error("Failed to apply section changes");
+      }
+    },
+  });
+
+export const createValidateSchemaTool = (env: Env) =>
+  createTool({
+    id: "VALIDATE_SCHEMA",
+    description: "Validate a JSON schema for AI generation",
+    inputSchema: z.object({
+      schema: z.any(),
+    }),
+    outputSchema: z.object({
+      valid: z.boolean(),
+      errors: z.array(z.string()),
+      warnings: z.array(z.string()).optional(),
+    }),
+    execute: async ({ context }) => {
+      try {
+        const validation = validateSchema(context.schema);
+        
+        // Add some warnings for best practices
+        const warnings: string[] = [];
+        
+        if (context.schema.description && context.schema.description.length < 20) {
+          warnings.push("Description is quite short - consider adding more detail for better AI context");
+        }
+        
+        if (context.schema.type === 'array' && !context.schema.items?.description) {
+          warnings.push("Array items should have descriptions for better AI understanding");
+        }
+
+        return {
+          valid: validation.valid,
+          errors: validation.errors,
+          warnings,
+        };
+      } catch (error) {
+        console.error("Failed to validate schema:", error);
+        return {
+          valid: false,
+          errors: ["Failed to validate schema: " + (error as Error).message],
+        };
+      }
+    },
+  });
+
 // Export all admin-related tools
 export const adminTools = [
   createGetSchemaConfigsTool,
@@ -706,4 +842,9 @@ export const adminTools = [
   createUpdateSectionDataTool,
   createGetEvaluationCriteriaTool,
   createUpdateEvaluationCriteriaTool,
+  // New enhanced editing tools
+  createGetEditableSectionTool,
+  createPreviewSectionWithSchemaTool,
+  createApplySectionChangesTool,
+  createValidateSchemaTool,
 ];

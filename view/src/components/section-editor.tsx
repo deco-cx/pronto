@@ -1,10 +1,17 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Button } from "./ui/button";
 import { Textarea } from "./ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
-import { X, Wand2, Eye, Check, AlertCircle } from "lucide-react";
-import { useGetSectionSchema, useReExpandSection, useUpdateSectionData } from "../hooks/useAdmin";
+import { Label } from "./ui/label";
+import { X, Wand2, Eye, Check, AlertCircle, Copy } from "lucide-react";
+import { 
+  useGetEditableSection, 
+  usePreviewSectionWithSchema, 
+  useApplySectionChanges 
+} from "../hooks/useAdmin";
+import { RawJsonViewer } from "./raw-json-viewer";
+import { SchemaEditor } from "./schema-editor";
 import { toast } from "sonner";
 
 interface SectionEditorProps {
@@ -27,21 +34,34 @@ export function SectionEditor({
   const [customPrompt, setCustomPrompt] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [previewData, setPreviewData] = useState<any>(null);
+  const [currentSchema, setCurrentSchema] = useState<any>(null);
+  const [schemaUsed, setSchemaUsed] = useState<any>(null);
 
-  const { data: schemaData } = useGetSectionSchema(sectionKey);
-  const reExpandMutation = useReExpandSection();
-  const updateSectionMutation = useUpdateSectionData();
+  const { data: editableData, isLoading } = useGetEditableSection(ideaId, sectionKey);
+  const previewMutation = usePreviewSectionWithSchema();
+  const applyChangesMutation = useApplySectionChanges();
+
+  // Initialize schema when data loads
+  React.useEffect(() => {
+    if (editableData?.currentSchema) {
+      setCurrentSchema(editableData.currentSchema);
+    }
+  }, [editableData]);
 
   const handleGeneratePreview = async () => {
+    if (!currentSchema) return;
+    
     try {
-      const result = await reExpandMutation.mutateAsync({
+      const result = await previewMutation.mutateAsync({
         ideaId,
         sectionKey,
+        schemaOverride: currentSchema,
         customPrompt: customPrompt.trim() || undefined,
         originalPrompt,
       });
       
-      setPreviewData(result.newData);
+      setPreviewData(result.previewData);
+      setSchemaUsed(result.schemaUsed);
       setShowPreview(true);
       toast.success("Preview generated successfully!");
     } catch (error) {
@@ -53,7 +73,7 @@ export function SectionEditor({
     if (!previewData) return;
     
     try {
-      await updateSectionMutation.mutateAsync({
+      await applyChangesMutation.mutateAsync({
         ideaId,
         sectionKey,
         newData: previewData,
@@ -65,6 +85,13 @@ export function SectionEditor({
     } catch (error) {
       toast.error("Failed to update section");
     }
+  };
+
+  const handleSchemaChange = (newSchema: any) => {
+    setCurrentSchema(newSchema);
+    // Reset preview when schema changes
+    setShowPreview(false);
+    setPreviewData(null);
   };
 
   const renderDataPreview = (data: any) => {
@@ -104,18 +131,47 @@ export function SectionEditor({
     return <pre className="text-sm bg-gray-100 p-3 rounded overflow-auto">{JSON.stringify(data, null, 2)}</pre>;
   };
 
+  if (isLoading) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <Card className="w-full max-w-4xl">
+          <CardContent className="p-8 text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p>Loading section data...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!editableData) {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <Card className="w-full max-w-4xl">
+          <CardContent className="p-8 text-center">
+            <AlertCircle className="w-8 h-8 text-red-500 mx-auto mb-4" />
+            <p>Failed to load section data</p>
+            <Button onClick={onClose} className="mt-4">Close</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-4xl max-h-[90vh] overflow-hidden">
+      <Card className="w-full max-w-6xl max-h-[90vh] overflow-hidden">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
                 Edit Section: {sectionKey}
-                <Badge variant="outline">{typeof currentData === 'string' ? 'string' : Array.isArray(currentData) ? 'array' : 'object'}</Badge>
+                <Badge variant="outline">
+                  {editableData.currentSchema?.type || 'unknown'}
+                </Badge>
               </CardTitle>
               <CardDescription>
-                Modify the AI prompt to regenerate this section with different requirements
+                Edit the schema and preview AI-generated changes before applying
               </CardDescription>
             </div>
             <Button variant="ghost" size="sm" onClick={onClose}>
@@ -125,53 +181,68 @@ export function SectionEditor({
         </CardHeader>
         
         <CardContent className="space-y-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-          {/* Current Schema Info */}
-          {schemaData && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <h3 className="font-semibold text-blue-800 mb-2">Current AI Prompt</h3>
-              <p className="text-sm text-blue-700">{schemaData.description}</p>
-            </div>
+          {/* Current Data Display */}
+          <RawJsonViewer 
+            data={editableData.currentData} 
+            title="Current Raw Data"
+            className="bg-orange-50 border-orange-200"
+          />
+
+          {/* Schema Configuration */}
+          {currentSchema && (
+            <SchemaEditor 
+              schema={currentSchema}
+              onSchemaChange={handleSchemaChange}
+            />
           )}
 
-          {/* Custom Prompt Input */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-gray-700">
-              Custom Prompt (optional - leave empty to use default)
-            </label>
-            <Textarea
-              value={customPrompt}
-              onChange={(e) => setCustomPrompt(e.target.value)}
-              placeholder="Enter custom instructions for how this section should be generated..."
-              rows={4}
-              className="resize-none"
-            />
-          </div>
+          {/* Custom Prompt Override */}
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium">Custom Prompt Override</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <Label htmlFor="custom-prompt">
+                  Custom Instructions (optional - overrides schema description)
+                </Label>
+                <Textarea
+                  id="custom-prompt"
+                  value={customPrompt}
+                  onChange={(e) => setCustomPrompt(e.target.value)}
+                  placeholder="Enter custom instructions for how this section should be generated..."
+                  rows={3}
+                  className="resize-none"
+                />
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Action Buttons */}
           <div className="flex gap-3">
             <Button
               onClick={handleGeneratePreview}
-              disabled={reExpandMutation.isPending}
+              disabled={previewMutation.isPending || !currentSchema}
               className="flex items-center gap-2"
             >
               <Wand2 className="w-4 h-4" />
-              {reExpandMutation.isPending ? "Generating..." : "Generate Preview"}
+              {previewMutation.isPending ? "Generating..." : "Generate Preview"}
             </Button>
             
             {showPreview && previewData && (
               <Button
                 onClick={handleApplyChanges}
-                disabled={updateSectionMutation.isPending}
+                disabled={applyChangesMutation.isPending}
                 className="flex items-center gap-2 bg-green-600 hover:bg-green-700"
               >
                 <Check className="w-4 h-4" />
-                {updateSectionMutation.isPending ? "Applying..." : "Apply Changes"}
+                {applyChangesMutation.isPending ? "Applying..." : "Apply Changes"}
               </Button>
             )}
           </div>
 
           {/* Preview Section */}
-          {showPreview && (
+          {showPreview && previewData && (
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <Eye className="w-5 h-5 text-green-600" />
@@ -180,27 +251,28 @@ export function SectionEditor({
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Current Data */}
-                <div>
-                  <h4 className="font-medium text-gray-800 mb-2 flex items-center gap-2">
-                    <AlertCircle className="w-4 h-4 text-orange-500" />
-                    Current Data
-                  </h4>
-                  <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 max-h-64 overflow-y-auto">
-                    {renderDataPreview(currentData)}
-                  </div>
-                </div>
+                <RawJsonViewer 
+                  data={editableData.currentData} 
+                  title="Current Data"
+                  className="bg-orange-50 border-orange-200"
+                />
                 
                 {/* New Data */}
-                <div>
-                  <h4 className="font-medium text-gray-800 mb-2 flex items-center gap-2">
-                    <Check className="w-4 h-4 text-green-500" />
-                    New Data
-                  </h4>
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 max-h-64 overflow-y-auto">
-                    {renderDataPreview(previewData)}
-                  </div>
-                </div>
+                <RawJsonViewer 
+                  data={previewData} 
+                  title="New Data (Preview)"
+                  className="bg-green-50 border-green-200"
+                />
               </div>
+
+              {/* Schema Used */}
+              {schemaUsed && (
+                <RawJsonViewer 
+                  data={schemaUsed} 
+                  title="Schema Used for Generation"
+                  className="bg-blue-50 border-blue-200"
+                />
+              )}
               
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
@@ -209,7 +281,7 @@ export function SectionEditor({
                 </div>
                 <p className="text-sm text-yellow-700">
                   Review the changes above. Once you apply them, the current data will be replaced with the new data. 
-                  This action cannot be undone.
+                  This action cannot be undone. You can copy the schema JSON to use in your code.
                 </p>
               </div>
             </div>

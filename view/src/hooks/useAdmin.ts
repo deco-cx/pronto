@@ -139,3 +139,47 @@ export function useUpdateEvaluationCriteria() {
     },
   });
 }
+
+// New enhanced editing hooks
+export function useGetEditableSection(ideaId: string, sectionKey: string) {
+  return useQuery({
+    queryKey: ['editableSection', ideaId, sectionKey],
+    queryFn: () => client.GET_EDITABLE_SECTION({ ideaId, sectionKey }),
+    enabled: !!ideaId && !!sectionKey,
+  });
+}
+
+export function usePreviewSectionWithSchema() {
+  return useMutation({
+    mutationFn: (input: {
+      ideaId: string;
+      sectionKey: string;
+      schemaOverride?: any;
+      customPrompt?: string;
+      originalPrompt: string;
+    }) => client.PREVIEW_SECTION_WITH_SCHEMA(input),
+  });
+}
+
+export function useApplySectionChanges() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (input: {
+      ideaId: string;
+      sectionKey: string;
+      newData: any;
+    }) => client.APPLY_SECTION_CHANGES(input),
+    onSuccess: (data, variables) => {
+      // Invalidate the specific idea query to refresh the data
+      queryClient.invalidateQueries({ queryKey: ['idea', variables.ideaId] });
+      queryClient.invalidateQueries({ queryKey: ['editableSection', variables.ideaId, variables.sectionKey] });
+    },
+  });
+}
+
+export function useValidateSchema() {
+  return useMutation({
+    mutationFn: (input: { schema: any }) => client.VALIDATE_SCHEMA(input),
+  });
+}
