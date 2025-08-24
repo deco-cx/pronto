@@ -9,7 +9,6 @@ import {
 import HomePage from "./routes/home.tsx";
 import ExpandPage from "./routes/expand.tsx";
 import HistoryPage from "./routes/history.tsx";
-import AdminPage from "./routes/admin.tsx";
 import { Toaster } from "sonner";
 
 import "./styles.css";
@@ -23,7 +22,6 @@ const routeTree = rootRoute.addChildren([
   HomePage(rootRoute),
   ExpandPage(rootRoute),
   HistoryPage(rootRoute),
-  AdminPage(rootRoute),
 ]);
 
 const queryClient = new QueryClient();

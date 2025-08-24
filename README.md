@@ -1,8 +1,8 @@
-# Pronto - Prompts with Purpose
+# Pronto - AI-Powered Idea Expansion Platform
 
-An AI-powered application that transforms simple software ideas into comprehensive, structured development plans. Built on the Deco MCP platform with a modern React frontend.
+Transform simple software ideas into comprehensive development plans with AI. Built on the Deco MCP platform with a modern React + Tailwind CSS frontend.
 
-Pronto takes your basic concept (like "I want to analyze my emails and find important ones") and generates detailed, actionable blueprints including architecture, data models, tools, workflows, and implementation phases.
+Pronto takes your basic concept and generates detailed, actionable blueprints including architecture, data models, tools, workflows, and implementation phases - ready to paste into your AI development tool.
 
 ## 📝 Development History
 
