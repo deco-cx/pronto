@@ -3343,7 +3343,444 @@ The debug tools look fine. Now let me update the README with the current state o
 
 ---
 
+<details><summary>Edit file: README.md</summary>
 
+undefined
+
+**Chunk 1**
+Lines added: 3, lines removed: 3
+
+```diff
+@@ -1,7 +1,7 @@
+- # Pronto - Prompts with Purpose
++ # Pronto - AI-Powered Idea Expansion Platform
+  
+- An AI-powered application that transforms simple software ideas into comprehensive, structured development plans. Built on the Deco MCP platform with a modern React frontend.
++ Transform simple software ideas into comprehensive development plans with AI. Built on the Deco MCP platform with a modern React + Tailwind CSS frontend.
+  
+- Pronto takes your basic concept (like "I want to analyze my emails and find important ones") and generates detailed, actionable blueprints including architecture, data models, tools, workflows, and implementation phases.
++ Pronto takes your basic concept and generates detailed, actionable blueprints including architecture, data models, tools, workflows, and implementation phases - ready to paste into your AI development tool.
+  
+  ## 📝 Development History
+```
+
+</details>
+
+---
+
+<details><summary>Edit file: README.md</summary>
+
+undefined
+
+**Chunk 1**
+Lines added: 15, lines removed: 16
+
+```diff
+@@ -14,28 +14,27 @@
+  
+  ### 🧠 AI-Powered Expansion
+- - **Smart Idea Analysis**: AI understands your concept and generates comprehensive development plans
+- - **Comprehensive Schemas**: Detailed JSON schemas for AI generation with structured validation
+- - **Deco Platform Integration**: Leverages the Deco platform's AI capabilities for consistent, high-quality expansions
++ - **Smart Idea Analysis**: Transform simple concepts into comprehensive development plans
++ - **Structured Generation**: JSON schemas ensure consistent, high-quality AI outputs
++ - **Deco Platform Integration**: Leverages enterprise-grade AI capabilities
+  
+  ### 🏗️ Complete Development Blueprints
+  - **Architecture Planning**: File structures following Deco MCP template patterns
+- - **Data Models**: Drizzle ORM schemas for SQLite databases
+- - **Tools & Workflows**: MCP tools with Zod schemas and Mastra workflow patterns  
+- - **UI/UX Design**: React components with TanStack Router and Tailwind CSS
++ - **Data Models**: Drizzle ORM schemas ready for implementation
++ - **Tools & Workflows**: MCP tools with Zod schemas and Mastra patterns
++ - **UI/UX Design**: React components with modern styling
+  - **Implementation Phases**: Realistic timelines and task breakdowns
+- - **External Integrations**: Suggestions for Gmail, Discord, GitHub, and 20+ other services
+  
+  ### 🎯 Interactive Experience
+- - **Section-by-Section Editing**: AI-powered editing for any part of your plan
+- - **Multi-Criteria Evaluation**: Assess ideas across ambiguity, market potential, feasibility, and innovation
+- - **Export Capabilities**: Generate clean prompts or markdown documentation
+- - **Visual Layouts**: SVG examples for frontend routes and components
++ - **Admin Mode**: Edit AI prompts and re-expand individual sections
++ - **Inline Evaluation**: Multi-criteria assessment (ambiguity, market potential, feasibility, innovation)
++ - **Export System**: Copy JSON data or ready-to-use development prompts
++ - **Real-time Updates**: See changes immediately with optimistic UI updates
+  
+  ### 🛠️ Technical Stack
+- - **MCP Server**: Cloudflare Workers + Deco runtime with comprehensive tools
+- - **React Frontend**: Modern React with TanStack Router, Query, and Tailwind CSS  
+- - **Database**: SQLite with Drizzle ORM for ideas, evaluations, and exports
+- - **Type Safety**: Full TypeScript with auto-generated RPC client types
+- - **AI Integration**: Structured object generation with validation and error handling
++ - **Backend**: Cloudflare Workers + Deco MCP runtime
++ - **Frontend**: React + TanStack Router + Tailwind CSS with custom color scheme
++ - **Database**: SQLite with Drizzle ORM and automatic migrations
++ - **Type Safety**: Full TypeScript with auto-generated RPC types
++ - **AI Integration**: Structured object generation with validation
+  
+  ## 🚀 Quick Start
+```
+
+</details>
+
+---
+
+<details><summary>Edit file: README.md</summary>
+
+undefined
+
+**Chunk 1**
+Lines added: 3, lines removed: 5
+
+```diff
+@@ -41,15 +41,13 @@
+  
+  ### Prerequisites
+- 
+- - Node.js ≥22.0.0
+- - [Deco CLI](https://deco.chat): `npm i -g deco-cli`
++ - Node.js ≥18.0.0
++ - [Deco CLI](https://deco.chat): `deno install -Ar -g -n deco jsr:@deco/cli`
+  
+  ### Setup
+- 
+  ```bash
+  # Install dependencies
+  npm install
+  
+- # Configure your app
++ # Configure your app (set name and workspace)
+  npm run configure
+  
+```
+
+**Chunk 2**
+Lines added: 8, lines removed: 2
+
+```diff
+@@ -58,6 +56,12 @@
+  ```
+  
+- The server will start on `http://localhost:8787` serving both your MCP endpoints
+- and the React frontend.
++ The app will be available at `http://localhost:8787` with both MCP endpoints and React frontend.
++ 
++ ### Usage
++ 1. **Enter your idea** in the input field on the home page
++ 2. **Wait for AI expansion** - comprehensive plan generation
++ 3. **Toggle Admin Mode** to edit individual sections and AI prompts
++ 4. **Run Evaluation** to assess your idea across multiple criteria
++ 5. **Export** as JSON data or ready-to-use development prompt
+  
+  ## 📁 Project Structure
+```
+
+</details>
+
+---
+
+<details><summary>Edit file: README.md</summary>
+
+undefined
+
+**Chunk 1**
+Lines added: 7, lines removed: 8
+
+```diff
+@@ -73,13 +73,12 @@
+  │   ├── schema.ts          # Database schema with Drizzle ORM
+  │   ├── db.ts              # Database configuration and migrations
+- │   ├── tools/             # Domain-organized tools (max 300 lines per file)
+- │   │   ├── index.ts       # Central export point for all tools
+- │   │   ├── ideas.ts       # Idea management (create, get, list, delete)
+- │   │   ├── expansion.ts   # AI-powered idea expansion and editing
++ │   ├── tools/             # Domain-organized tools
++ │   │   ├── index.ts       # Central export point
++ │   │   ├── ideas.ts       # Idea CRUD operations
++ │   │   ├── admin.ts       # Admin tools and section re-expansion
+  │   │   ├── evaluation.ts  # Multi-criteria idea evaluation
+- │   │   ├── export.ts      # Prompt and markdown generation
+- │   │   └── ai.ts          # AI proxy tools for platform integration
+- │   ├── workflows/         # Complex multi-step workflows
+- │   │   ├── index.ts       # Central export point for workflows
++ │   │   ├── export.ts      # Export functionality
++ │   │   └── ai.ts          # AI proxy tools
++ │   ├── workflows/         # Multi-step workflows
+  │   │   └── expansion.ts   # Complete expansion workflow
+  │   └── drizzle/          # Database migrations
+```
+
+**Chunk 2**
+Lines added: 13, lines removed: 12
+
+```diff
+@@ -88,16 +87,17 @@
+      │   ├── routes/       # Application routes
+      │   │   ├── home.tsx  # Main page with idea input
+-     │   │   ├── expand.tsx # Expansion result display
+-     │   │   └── history.tsx # Idea management and history
+-     │   ├── components/   # Reusable UI components
+-     │   │   ├── idea-input.tsx      # ChatGPT-style textarea with examples
+-     │   │   ├── expansion-display.tsx # Comprehensive expansion viewer
+-     │   │   └── ui/                 # shadcn/ui component library
+-     │   ├── hooks/        # TanStack Query hooks for RPC calls
+-     │   │   ├── useIdeas.ts     # Idea CRUD operations
+-     │   │   ├── useExpansion.ts # AI expansion and editing
+-     │   │   ├── useEvaluation.ts # Idea evaluation
+-     │   │   └── useExport.ts    # Export functionality
+-     │   └── lib/rpc.ts    # Typed RPC client for server communication
++     │   │   ├── expand.tsx # Expansion display with admin mode
++     │   │   └── history.tsx # Idea management
++     │   ├── components/   # UI components
++     │   │   ├── expansion-display.tsx # Main expansion viewer
++     │   │   ├── section-editor.tsx    # Inline section editing
++     │   │   ├── export-modal.tsx      # Export functionality
++     │   │   ├── inline-evaluation.tsx # Evaluation interface
++     │   │   └── ui/                   # shadcn/ui components
++     │   ├── hooks/        # TanStack Query hooks
++     │   │   ├── useIdeas.ts     # Idea operations
++     │   │   ├── useAdmin.ts     # Admin and section editing
++     │   │   └── useEvaluation.ts # Evaluation operations
++     │   └── lib/rpc.ts    # Typed RPC client
+      └── package.json
+  ```
+```
+
+</details>
+
+---
+
+<details><summary>Edit file: README.md</summary>
+
+undefined
+
+**Chunk 1**
+Lines added: 6, lines removed: 6
+
+```diff
+@@ -112,10 +112,10 @@
+  - **`npm run db:generate`** - Generate database migration files
+  
+- ### Adding New Features
+- 1. **Tools**: Add domain-specific tools in `server/tools/[domain].ts`
+- 2. **Workflows**: Create multi-step workflows in `server/workflows/`
+- 3. **Database Changes**: Modify `server/schema.ts` then run `npm run db:generate`
+- 4. **Frontend**: Create hooks in `view/src/hooks/` and use TanStack Query patterns
+- 5. **Routes**: Add new routes in `view/src/routes/` using TanStack Router
++ ### Key Features
++ - **Admin Mode**: Toggle admin mode to edit AI prompts and re-expand sections
++ - **Section Editing**: Click edit on any section to customize AI generation
++ - **Evaluation**: Built-in multi-criteria evaluation with configurable criteria
++ - **Export**: Copy JSON data or development-ready prompts
++ - **Real-time Updates**: Changes reflect immediately with optimistic UI
+  
+  ## 💡 Usage Examples
+```
+
+</details>
+
+---
+
+<details><summary>Edit file: README.md</summary>
+
+undefined
+
+**Chunk 1**
+Lines added: 15, lines removed: 32
+
+```diff
+@@ -121,36 +121,19 @@
+  ## 💡 Usage Examples
+  
+- ### Basic Idea Expansion
+- ```typescript
+- // User inputs: "I want to create an app that analyzes my emails"
+- // AI generates comprehensive plan with:
+- // - Architecture (file structure following Deco patterns)
+- // - Data models (Drizzle schemas for emails, analysis results)
+- // - Tools (email fetching, AI analysis, filtering)
+- // - Workflows (complete email processing pipeline)
+- // - UI components (inbox view, analysis dashboard)
+- // - Implementation phases (3-month roadmap with specific tasks)
+- ```
+- 
+- ### Interactive Editing
+- ```typescript
+- // Edit any section with natural language
+- const editResult = await client.EDIT_SECTION({
+-   ideaId: "123",
+-   section: "features", 
+-   editPrompt: "Add real-time notifications and mobile app support",
+-   currentData: currentFeatures
+- });
+- ```
+- 
+- ### Multi-Criteria Evaluation
+- ```typescript
+- // AI evaluates ideas across 6 criteria (1-10 scale)
+- const evaluation = await client.EVALUATE_IDEA({
+-   ideaId: "123",
+-   expandedData: expandedIdea
+- });
+- // Returns scores for: ambiguity avoidance, interest level, 
+- // market potential, technical feasibility, innovation, user value
++ ### Basic Workflow
++ 1. **Input**: "Create a workshop management system with WhatsApp integration"
++ 2. **AI Expansion**: Generates comprehensive plan with architecture, data models, tools, workflows, and implementation phases
++ 3. **Admin Mode**: Edit individual sections (e.g., modify "features" prompt to add specific requirements)
++ 4. **Evaluation**: Run multi-criteria assessment (ambiguity, market potential, feasibility, innovation)
++ 5. **Export**: Copy development prompt and paste into Cursor/Claude for implementation
++ 
++ ### Development Integration
++ ```bash
++ # After exporting from Pronto:
++ npm create deco
++ # Follow setup steps
++ # Open Cursor/Claude
++ # Paste the exported development prompt
++ # AI builds the complete application
+  ```
+  
+```
+
+</details>
+
+---
+
+Let me simplify the rest of the README by removing some of the overly technical sections:
+
+---
+
+<details><summary>Edit file: README.md</summary>
+
+undefined
+
+**Chunk 1**
+Lines added: 11, lines removed: 32
+
+```diff
+@@ -137,40 +137,19 @@
+  # Paste the exported development prompt
+  # AI builds the complete application
+- ```
+- 
+- ## 🔗 Frontend ↔ Server Communication
+- 
+- Fully-typed RPC communication using TanStack Query patterns:
+- 
+- ```typescript
+- // Custom hooks wrap RPC calls for optimal UX
+- const { data: idea, isLoading } = useGetIdea("123");
+- const expandMutation = useCompleteExpansion();
+- 
+- // Expand idea with loading states and error handling
+- expandMutation.mutate({ 
+-   originalPrompt: "My idea...", 
+-   ideaId: "123" 
+- });
+  ```
+  
+  ## 🏗️ Architecture Highlights
+  
+- ### Domain-Driven Design
+- - **Tools organized by domain** (ideas, expansion, evaluation, export)
+- - **Maximum 300 lines per file** for maintainability
+- - **Central export points** for clean imports
+- 
+- ### AI Integration Patterns
+- - **Proxy tools** for Deco platform AI capabilities
+- - **Comprehensive JSON schemas** for structured generation
+- - **Error handling and validation** at every layer
+- - **Prompt engineering** with few-shot learning examples
+- 
+- ### Database Design
+- - **SQLite with Drizzle ORM** for simplicity and type safety
+- - **JSON columns** for flexible expanded data storage
+- - **Automatic migrations** applied lazily at runtime
+- - **Proper relationships** between ideas, evaluations, and exports
++ ### Clean Architecture
++ - **Domain-organized tools** with clear separation of concerns
++ - **Type-safe RPC communication** between frontend and backend
++ - **Automatic database migrations** with Drizzle ORM
++ - **Optimistic UI updates** for responsive user experience
++ 
++ ### AI Integration
++ - **Structured generation** with JSON schema validation
++ - **Section-level re-expansion** for granular control
++ - **Configurable evaluation criteria** for idea assessment
++ - **Export-ready prompts** for seamless development workflow
+  
+  ## 📖 Learn More
+```
+
+</details>
+
+---
+
+<details><summary>Edit file: README.md</summary>
+
+undefined
+
+**Chunk 1**
+Lines added: 12, lines removed: 6
+
+```diff
+@@ -152,15 +152,21 @@
+  - **Configurable evaluation criteria** for idea assessment
+  - **Export-ready prompts** for seamless development workflow
++ 
++ ## 🌟 Color Scheme
++ 
++ Pronto uses a modern, calming color palette:
++ - **Primary**: #86DEE8 (Light Blue) - Main elements and backgrounds
++ - **Secondary**: #A1C5F9 (Purple-Blue) - Accents and highlights  
++ - **Accent**: #FEE38B (Warm Yellow) - Admin mode and interactive elements
+  
+  ## 📖 Learn More
+  
+- Built on the [Deco platform](https://deco.chat) for MCP server development:
+- - [Deco Documentation](https://docs.deco.page)
+- - [MCP Specification](https://spec.modelcontextprotocol.io/)
+- - [Cursor Rules](.cursor/rules/) - Comprehensive development guidelines
++ - **[Deco Platform](https://deco.chat)** - MCP server development platform
++ - **[Deco Documentation](https://docs.deco.page)** - Complete development guide
++ - **[MCP Specification](https://spec.modelcontextprotocol.io/)** - Model Context Protocol
+  
+  ---
+  
+- **Transform your ideas into actionable development plans with AI-powered precision.** 
+- Ready to build the future? Start with Pronto!
++ **Transform your ideas into actionable development plans with AI-powered precision.**  
++ Ready to build the future? Start with Pronto! 🚀
+  
+```
+
+</details>
+
+---
+
+
+
+---
+
+
+
+---
+
+
+
+---
+
+
+
+---
+
+
+
+---
+
+Error parsing todo list data
 
 ---
 

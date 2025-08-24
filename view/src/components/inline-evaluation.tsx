@@ -68,11 +68,9 @@ export function InlineEvaluation({ ideaId, expandedData }: InlineEvaluationProps
         expandedData
       });
       
-      console.log("Evaluation result:", result); // Debug log
       setEvaluationResult(result);
       toast.success("Evaluation completed successfully!");
     } catch (error) {
-      console.error("Evaluation error:", error); // Debug log
       toast.error("Failed to run evaluation");
     }
   };
