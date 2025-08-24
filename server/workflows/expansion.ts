@@ -16,9 +16,6 @@ import type { Env } from "../main.ts";
 import { getDb } from "../db.ts";
 import { ideas } from "../schema.ts";
 
-// Set to true to mock AI calls and return sample data for faster testing
-const DEBUG = true;
-
 // Inline expansion schema
 const expansionSchema = {
   type: 'object',
@@ -142,12 +139,6 @@ const createInlineExpandIdeaTool = (env: Env) =>
     }),
     execute: async ({ context }) => {
       try {
-        console.log('🔧 INLINE_EXPAND_IDEA called with:', {
-          originalPrompt: context.originalPrompt?.substring(0, 50) + '...',
-          ideaId: context.ideaId,
-          ideaIdType: typeof context.ideaId
-        });
-
         const prompt = `You are an expert software architect and product manager specializing in the Deco MCP platform. 
 
 Your task is to transform this simple software idea into a comprehensive, detailed development plan:
@@ -156,85 +147,20 @@ Your task is to transform this simple software idea into a comprehensive, detail
 
 Create a complete plan that follows Deco MCP platform patterns and best practices.`;
 
-        let expandedData;
-        
-        if (DEBUG) {
-          console.log('🔧 DEBUG mode: Using mock data instead of AI call');
-          expandedData = {
-            title: "Mock Expanded Idea",
-            description: "This is a mock expanded idea for debugging purposes. Original prompt: " + context.originalPrompt,
-            features: [
-              {
-                title: "Mock Feature 1",
-                description: "This is a mock feature for testing"
-              },
-              {
-                title: "Mock Feature 2", 
-                description: "Another mock feature for testing"
-              }
-            ],
-            architecture: {
-              files: [
-                {
-                  path: "src/mock/example.ts",
-                  description: "Mock architecture file"
-                }
-              ]
-            },
-            dataModels: [
-              {
-                title: "Mock Model",
-                schema: "// Mock schema code here"
-              }
-            ],
-            tools: [
-              {
-                title: "Mock Tool",
-                description: "Mock tool description",
-                inputSchema: "z.object({ mockInput: z.string() })",
-                outputSchema: "z.object({ mockOutput: z.boolean() })"
-              }
-            ],
-            views: [
-              {
-                title: "Mock View",
-                pathTemplate: "/mock",
-                description: "Mock view description",
-                layoutExample: "<svg>Mock SVG</svg>"
-              }
-            ],
-            implementationPhases: [
-              {
-                title: "Mock Phase",
-                description: "Mock implementation phase",
-                duration: "1 week",
-                tasks: ["Mock task 1", "Mock task 2"]
-              }
-            ],
-            successMetrics: [
-              "Mock metric 1",
-              "Mock metric 2"
-            ]
-          };
-        } else {
-          const result = await env.DECO_CHAT_WORKSPACE_API.AI_GENERATE_OBJECT({
-            messages: [{
-              role: 'user',
-              content: prompt
-            }],
-            schema: expansionSchema
-          });
+        const result = await env.DECO_CHAT_WORKSPACE_API.AI_GENERATE_OBJECT({
+          messages: [{
+            role: 'user',
+            content: prompt
+          }],
+          schema: expansionSchema
+        });
 
-          if (!result.object) {
-            throw new Error("AI did not return structured expansion data");
-          }
-          
-          expandedData = result.object;
+        if (!result.object) {
+          throw new Error("AI did not return structured expansion data");
         }
 
-        console.log('🔧 INLINE_EXPAND_IDEA completed successfully');
         return {
-          expandedData,
+          expandedData: result.object,
           ideaId: context.ideaId,
           success: true,
         };
@@ -259,33 +185,52 @@ const createInlineSuggestExternalToolsTool = (env: Env) =>
     }),
     execute: async ({ context }) => {
       try {
-        console.log('🔧 INLINE_SUGGEST_EXTERNAL_TOOLS called');
+        const prompt = `Based on this expanded software idea, suggest 3-5 relevant external tools and integrations that would enhance the application:
 
-        // Mock external tools for now
-        const toolsFromOtherApps = [
-          {
-            service: "GitHub",
-            toolName: "GitHub API",
-            description: "Manages code repositories, issues, and pull requests.",
-            useCase: "Integrate for version control and collaborative development tracking within the application."
-          },
-          {
-            service: "Slack",
-            toolName: "Slack API",
-            description: "Facilitates team communication and notifications.",
-            useCase: "Send real-time alerts and updates to team channels about application events or user activities."
-          },
-          {
-            service: "Stripe",
-            toolName: "Stripe API",
-            description: "Handles online payments and subscriptions.",
-            useCase: "Enable payment processing for premium features or subscription plans within the application."
-          }
-        ];
+${JSON.stringify(context.expandedIdea, null, 2)}
 
-        console.log('🔧 INLINE_SUGGEST_EXTERNAL_TOOLS completed successfully');
+For each suggested tool, provide:
+- service: The service name (e.g., "GitHub", "Slack", "Stripe")
+- toolName: The specific API or tool name
+- description: What the tool does
+- useCase: How it would be used in this specific application
+
+Focus on tools that would genuinely add value to this particular idea.`;
+
+        const schema = {
+          type: 'object',
+          properties: {
+            toolsFromOtherApps: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  service: { type: 'string' },
+                  toolName: { type: 'string' },
+                  description: { type: 'string' },
+                  useCase: { type: 'string' }
+                },
+                required: ['service', 'toolName', 'description', 'useCase']
+              }
+            }
+          },
+          required: ['toolsFromOtherApps']
+        };
+
+        const result = await env.DECO_CHAT_WORKSPACE_API.AI_GENERATE_OBJECT({
+          messages: [{
+            role: 'user',
+            content: prompt
+          }],
+          schema
+        });
+
+        if (!result.object) {
+          throw new Error("AI did not return external tools suggestions");
+        }
+
         return {
-          toolsFromOtherApps,
+          toolsFromOtherApps: (result.object.toolsFromOtherApps as any[]) || [],
           success: true,
         };
       } catch (error) {
@@ -311,27 +256,13 @@ const createInlineUpdateIdeaTool = (env: Env) =>
       const db = await getDb(env);
       
       try {
-        console.log('🔧 INLINE_UPDATE_IDEA called with context id:', context.id);
-        console.log('🔧 INLINE_UPDATE_IDEA context id type:', typeof context.id);
-        console.log('🔧 INLINE_UPDATE_IDEA expandedData keys:', Object.keys(context.expandedData || {}));
-        
         // Check if idea exists
-        console.log('🔧 Searching for idea with id:', context.id);
         const existing = await db.select()
           .from(ideas)
           .where(eq(ideas.id, context.id))
           .limit(1);
         
-        console.log('🔧 Found existing ideas:', existing.length);
-        if (existing.length > 0) {
-          console.log('🔧 Found idea:', { id: existing[0].id, prompt: existing[0].originalPrompt.substring(0, 50) });
-        }
-        
         if (existing.length === 0) {
-          // List all ideas to debug
-          const allIdeas = await db.select({ id: ideas.id, prompt: ideas.originalPrompt }).from(ideas);
-          console.log('🔧 All ideas in database:', allIdeas);
-          console.log('🔧 Looking for id:', context.id, 'in:', allIdeas.map(i => i.id));
           throw new Error("Idea not found");
         }
         
@@ -342,12 +273,11 @@ const createInlineUpdateIdeaTool = (env: Env) =>
           })
           .where(eq(ideas.id, context.id));
         
-        console.log('🔧 INLINE_UPDATE_IDEA completed successfully');
         return {
           success: true,
         };
       } catch (error) {
-        console.error("🔧 Failed to update idea:", error);
+        console.error("Failed to update idea:", error);
         throw new Error("Failed to update idea");
       }
     },
@@ -358,8 +288,6 @@ export const createCompleteExpansionWorkflow = (env: Env) => {
   const expandIdeaStep = createStepFromTool(createInlineExpandIdeaTool(env));
   const suggestExternalToolsStep = createStepFromTool(createInlineSuggestExternalToolsTool(env));
   const updateIdeaStep = createStepFromTool(createInlineUpdateIdeaTool(env));
-
-  console.log('🔧 Creating COMPLETE_EXPANSION_WORKFLOW...');
 
   return createWorkflow({
     id: "COMPLETE_EXPANSION_WORKFLOW",
@@ -373,39 +301,24 @@ export const createCompleteExpansionWorkflow = (env: Env) => {
       success: z.boolean(),
     }),
   })
-    // Debug: Log the initial workflow input and store it for later access
-    .map(async ({ inputData }) => {
-      console.log('🚀 WORKFLOW START - Input received:', JSON.stringify(inputData, null, 2));
-      console.log('🚀 WORKFLOW START - ideaId:', inputData.ideaId);
-      console.log('🚀 WORKFLOW START - ideaId type:', typeof inputData.ideaId);
-      return inputData; // Pass through unchanged
-    })
-    
     // Step 1: Expand the idea
     .then(expandIdeaStep)
     
     // Step 2: Get external tools suggestions
     .map(async ({ inputData, getStepResult }) => {
       const expandedData = getStepResult(expandIdeaStep).expandedData;
-      console.log('🚀 WORKFLOW - Preparing external tools input');
-      return { expandedIdea: expandedData }; // Format for external tools step
+      return { expandedIdea: expandedData };
     })
     .then(suggestExternalToolsStep)
     
     // Step 3: Update the idea in database
     .map(async ({ inputData, getStepResult }) => {
-      console.log('🚀 WORKFLOW BEFORE UPDATE - Input data:', JSON.stringify(inputData, null, 2));
-      
       const expandResult = getStepResult(expandIdeaStep);
       const expandedData = expandResult.expandedData;
-      const ideaId = expandResult.ideaId; // Get ideaId from expand step result
+      const ideaId = expandResult.ideaId;
       const externalTools = getStepResult(suggestExternalToolsStep).toolsFromOtherApps;
       
-      console.log('🚀 WORKFLOW BEFORE UPDATE - ideaId from expand step:', ideaId);
-      
       if (!ideaId) {
-        console.error('🚀 WORKFLOW ERROR - ideaId is missing from expand step result');
-        console.error('🚀 WORKFLOW ERROR - expandResult keys:', Object.keys(expandResult));
         throw new Error('ideaId is missing from expand step result');
       }
       
@@ -415,21 +328,15 @@ export const createCompleteExpansionWorkflow = (env: Env) => {
         toolsFromOtherApps: externalTools,
       };
       
-      // Format for UPDATE_IDEA tool
-      const updateData = {
+      return {
         id: ideaId,
         expandedData: completeExpandedData,
       };
-      
-      console.log('🚀 WORKFLOW UPDATE DATA:', JSON.stringify({ id: updateData.id, hasExpandedData: !!updateData.expandedData }, null, 2));
-      return updateData;
     })
     .then(updateIdeaStep)
     
     // Final output formatting
     .map(async ({ inputData, getStepResult }) => {
-      console.log('🚀 WORKFLOW FINAL - Formatting output');
-      
       const expandedData = getStepResult(expandIdeaStep).expandedData;
       const externalTools = getStepResult(suggestExternalToolsStep).toolsFromOtherApps;
       

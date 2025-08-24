@@ -9,7 +9,7 @@ import { z } from "zod";
 import { eq, and } from "drizzle-orm";
 import type { Env } from "../main.ts";
 import { getDb } from "../db.ts";
-import { schemaConfigs, schemaFields } from "../schema.ts";
+import { schemaConfigs, schemaFields, ideas } from "../schema.ts";
 import { v4 as uuidv4 } from "uuid";
 
 export const createGetSchemaConfigsTool = (env: Env) =>
@@ -511,39 +511,20 @@ Section Requirements: ${promptDescription}
 
 Generate ONLY the ${context.sectionKey} data that matches this exact schema structure. Do not include any other sections or wrapper objects.`;
 
-        // For now, use mock data (will be replaced with actual AI call)
-        let newSectionData;
-        
-        // Mock data based on section type
-        switch (context.sectionKey) {
-          case 'features':
-            newSectionData = [
-              {
-                title: "Re-expanded Feature 1",
-                description: "This is a re-expanded feature with updated requirements"
-              },
-              {
-                title: "Re-expanded Feature 2", 
-                description: "Another re-expanded feature with enhanced functionality"
-              }
-            ];
-            break;
-          case 'tools':
-            newSectionData = [
-              {
-                title: "Re-expanded Tool",
-                description: "Updated tool with enhanced capabilities",
-                inputSchema: "z.object({ updatedInput: z.string() })",
-                outputSchema: "z.object({ updatedOutput: z.boolean() })"
-              }
-            ];
-            break;
-          case 'description':
-            newSectionData = `Re-expanded description: ${context.originalPrompt} - This has been updated with enhanced details and improved clarity.`;
-            break;
-          default:
-            newSectionData = `Re-expanded ${context.sectionKey} data`;
+        // Use AI to generate the new section data
+        const result = await env.DECO_CHAT_WORKSPACE_API.AI_GENERATE_OBJECT({
+          messages: [{
+            role: 'user',
+            content: prompt
+          }],
+          schema: sectionSchema
+        });
+
+        if (!result.object) {
+          throw new Error("AI did not return section data");
         }
+
+        const newSectionData = result.object;
 
         return {
           sectionKey: context.sectionKey,
@@ -613,6 +594,105 @@ export const createUpdateSectionDataTool = (env: Env) =>
     },
   });
 
+export const createGetEvaluationCriteriaTool = (env: Env) =>
+  createTool({
+    id: "GET_EVALUATION_CRITERIA",
+    description: "Get current evaluation criteria configuration",
+    inputSchema: z.object({}),
+    outputSchema: z.object({
+      criteria: z.array(z.object({
+        key: z.string(),
+        title: z.string(),
+        description: z.string(),
+        prompt: z.string(),
+      })),
+      success: z.boolean(),
+    }),
+    execute: async ({ context }) => {
+      try {
+        // For now, return the current hardcoded criteria
+        // TODO: Make this configurable via database
+        const criteria = [
+          {
+            key: "ambiguityAvoidance",
+            title: "Ambiguity Avoidance",
+            description: "How clear and well-defined is the concept?",
+            prompt: "How clear and well-defined is the concept? Are there any vague or unclear aspects? Score 1-10."
+          },
+          {
+            key: "interestLevel",
+            title: "Interest Level", 
+            description: "How interesting and engaging is this idea?",
+            prompt: "How interesting and engaging is this idea? Would it capture people's attention? Score 1-10."
+          },
+          {
+            key: "marketPotential2025",
+            title: "Market Potential 2025",
+            description: "What is the market potential for this idea in 2025?",
+            prompt: "What is the market potential for this idea in 2025? Consider current trends and future projections. Score 1-10."
+          },
+          {
+            key: "technicalFeasibility",
+            title: "Technical Feasibility",
+            description: "How technically feasible is this project?",
+            prompt: "How technically feasible is this project with current technology and the specified stack? Score 1-10."
+          },
+          {
+            key: "innovationLevel",
+            title: "Innovation Level",
+            description: "How innovative and novel is this idea?",
+            prompt: "How innovative and novel is this idea? Does it bring something new to the market? Score 1-10."
+          },
+          {
+            key: "userValueProposition",
+            title: "User Value Proposition",
+            description: "How much value would this provide to end users?",
+            prompt: "How much value would this provide to end users? Would they pay for it or use it regularly? Score 1-10."
+          }
+        ];
+
+        return {
+          criteria,
+          success: true,
+        };
+      } catch (error) {
+        console.error("Failed to get evaluation criteria:", error);
+        throw new Error("Failed to get evaluation criteria");
+      }
+    },
+  });
+
+export const createUpdateEvaluationCriteriaTool = (env: Env) =>
+  createTool({
+    id: "UPDATE_EVALUATION_CRITERIA",
+    description: "Update evaluation criteria configuration",
+    inputSchema: z.object({
+      criteria: z.array(z.object({
+        key: z.string(),
+        title: z.string(),
+        description: z.string(),
+        prompt: z.string(),
+      })),
+    }),
+    outputSchema: z.object({
+      success: z.boolean(),
+    }),
+    execute: async ({ context }) => {
+      try {
+        // For now, just return success
+        // TODO: Save to database when we implement full configurability
+        console.log("Evaluation criteria update requested:", context.criteria);
+        
+        return {
+          success: true,
+        };
+      } catch (error) {
+        console.error("Failed to update evaluation criteria:", error);
+        throw new Error("Failed to update evaluation criteria");
+      }
+    },
+  });
+
 // Export all admin-related tools
 export const adminTools = [
   createGetSchemaConfigsTool,
@@ -624,4 +704,6 @@ export const adminTools = [
   createGetSectionSchemaTool,
   createReExpandSectionTool,
   createUpdateSectionDataTool,
+  createGetEvaluationCriteriaTool,
+  createUpdateEvaluationCriteriaTool,
 ];

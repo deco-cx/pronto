@@ -296,7 +296,7 @@ export function ExpansionDisplay({ idea, adminMode = false }: ExpansionDisplayPr
                       e.stopPropagation();
                       setEditingSection(section.key);
                     }}
-                    className="flex items-center gap-1 text-[#FEE38B] hover:text-[#FEE38B]/80 hover:bg-[#FEE38B]/10"
+                    className="flex items-center gap-1 text-gray-700 hover:text-gray-900 hover:bg-[#FEE38B]/20 border border-[#FEE38B]/30 hover:border-[#FEE38B]/50"
                   >
                     <Edit className="w-3 h-3" />
                     Edit
@@ -315,6 +315,7 @@ export function ExpansionDisplay({ idea, adminMode = false }: ExpansionDisplayPr
       <InlineEvaluation 
         ideaId={idea.id}
         expandedData={expanded}
+        adminMode={adminMode}
       />
 
       {/* Section Editor Modal */}

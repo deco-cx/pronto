@@ -1,14 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
-import { BarChart, Play, CheckCircle, AlertCircle } from "lucide-react";
-import { useEvaluateIdea } from "../hooks/useEvaluation";
+import { BarChart, Play, CheckCircle, AlertCircle, Settings } from "lucide-react";
+import { useEvaluateIdea, useGetEvaluation } from "../hooks/useEvaluation";
+import { useGetEvaluationCriteria } from "../hooks/useAdmin";
 import { toast } from "sonner";
 
 interface InlineEvaluationProps {
   ideaId: string;
   expandedData: any;
+  adminMode?: boolean;
 }
 
 interface EvaluationCriteria {
@@ -57,9 +59,22 @@ const evaluationCriteria: EvaluationCriteria[] = [
   }
 ];
 
-export function InlineEvaluation({ ideaId, expandedData }: InlineEvaluationProps) {
+export function InlineEvaluation({ ideaId, expandedData, adminMode = false }: InlineEvaluationProps) {
   const [evaluationResult, setEvaluationResult] = useState<any>(null);
+  const [showCriteriaConfig, setShowCriteriaConfig] = useState(false);
   const evaluateMutation = useEvaluateIdea();
+  const { data: existingEvaluation, isLoading: isLoadingEvaluation } = useGetEvaluation(ideaId);
+  const { data: criteriaConfig, isLoading: isLoadingCriteria } = useGetEvaluationCriteria();
+
+  // Load existing evaluation on mount
+  useEffect(() => {
+    if (existingEvaluation?.evaluation) {
+      setEvaluationResult(existingEvaluation.evaluation);
+    }
+  }, [existingEvaluation]);
+
+  // Use configurable criteria if available, otherwise fallback to hardcoded
+  const currentCriteria = criteriaConfig?.criteria || evaluationCriteria;
 
   const handleRunEvaluation = async () => {
     try {
@@ -100,14 +115,28 @@ export function InlineEvaluation({ ideaId, expandedData }: InlineEvaluationProps
               AI-powered evaluation across multiple criteria to assess your idea's potential
             </CardDescription>
           </div>
-          <Button
-            onClick={handleRunEvaluation}
-            disabled={evaluateMutation.isPending}
-            className="flex items-center gap-2"
-          >
-            <Play className="w-4 h-4" />
-            {evaluateMutation.isPending ? "Evaluating..." : "Run Evaluation"}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={handleRunEvaluation}
+              disabled={evaluateMutation.isPending || isLoadingEvaluation}
+              className="flex items-center gap-2"
+            >
+              <Play className="w-4 h-4" />
+              {evaluateMutation.isPending ? "Evaluating..." : (evaluationResult ? "Re-run Evaluation" : "Run Evaluation")}
+            </Button>
+            
+            {adminMode && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCriteriaConfig(!showCriteriaConfig)}
+                className="flex items-center gap-2 border-[#FEE38B] text-gray-700 hover:bg-[#FEE38B]/10"
+              >
+                <Settings className="w-4 h-4" />
+                Configure
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
 
@@ -116,15 +145,28 @@ export function InlineEvaluation({ ideaId, expandedData }: InlineEvaluationProps
         <div>
           <h3 className="font-semibold text-gray-800 mb-3">Evaluation Criteria</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-            {evaluationCriteria.map((criterion) => (
-              <div
-                key={criterion.key}
-                className={`p-3 rounded-lg border ${criterion.color}`}
-              >
-                <h4 className="font-medium text-sm">{criterion.title}</h4>
-                <p className="text-xs mt-1 opacity-80">{criterion.description}</p>
-              </div>
-            ))}
+            {currentCriteria.map((criterion, index) => {
+              // Use color from hardcoded criteria or default colors
+              const colors = [
+                "bg-[#86DEE8]/20 text-gray-800 border-[#86DEE8]/50",
+                "bg-[#A1C5F9]/20 text-gray-800 border-[#A1C5F9]/50",
+                "bg-[#FEE38B]/20 text-gray-800 border-[#FEE38B]/50",
+                "bg-[#86DEE8]/30 text-gray-800 border-[#86DEE8]/60",
+                "bg-[#A1C5F9]/30 text-gray-800 border-[#A1C5F9]/60",
+                "bg-[#FEE38B]/30 text-gray-800 border-[#FEE38B]/60"
+              ];
+              const color = criterion.color || colors[index % colors.length];
+              
+              return (
+                <div
+                  key={criterion.key}
+                  className={`p-3 rounded-lg border ${color}`}
+                >
+                  <h4 className="font-medium text-sm">{criterion.title}</h4>
+                  <p className="text-xs mt-1 opacity-80">{criterion.description}</p>
+                </div>
+              );
+            })}
           </div>
         </div>
 

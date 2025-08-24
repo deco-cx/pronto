@@ -118,3 +118,24 @@ export function useUpdateSectionData() {
     },
   });
 }
+
+// Hook for getting evaluation criteria configuration
+export function useGetEvaluationCriteria() {
+  return useQuery({
+    queryKey: ['evaluationCriteria'],
+    queryFn: () => client.GET_EVALUATION_CRITERIA({}),
+  });
+}
+
+// Hook for updating evaluation criteria
+export function useUpdateEvaluationCriteria() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: (input: { criteria: Array<{ key: string; title: string; description: string; prompt: string }> }) => 
+      client.UPDATE_EVALUATION_CRITERIA(input),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['evaluationCriteria'] });
+    },
+  });
+}
