@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "pronto": {
+      "type": "http",
+      "url": "https://localhost-c9d43ebc.deco.host/mcp"
+    }
+  }
+}
