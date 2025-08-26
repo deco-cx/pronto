@@ -28,8 +28,8 @@ export function SchemaEditor({ schema, onSchemaChange, className = "" }: SchemaE
       const schemaString = JSON.stringify(schema, null, 2);
       await navigator.clipboard.writeText(schemaString);
       setCopied(true);
-      toast.success("Schema JSON copied to clipboard!");
-      setTimeout(() => setCopied(false), 2000);
+      toast.success("Schema JSON copied! Paste into server/defaultSchemas.ts to make it permanent.");
+      setTimeout(() => setCopied(false), 3000);
     } catch (error) {
       toast.error("Failed to copy to clipboard");
     }
@@ -233,6 +233,25 @@ export function SchemaEditor({ schema, onSchemaChange, className = "" }: SchemaE
       </CardHeader>
       <CardContent>
         {viewMode === 'form' ? renderFormView() : renderJsonView()}
+        
+        {/* Temporary Workaround Notice */}
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-start gap-2">
+            <Code className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+            <div className="text-sm">
+              <p className="font-medium text-blue-800 mb-1">Developer Workflow (Temporary)</p>
+              <p className="text-blue-700">
+                Schema changes are not automatically saved. To make improvements permanent:
+              </p>
+              <ol className="text-blue-700 mt-1 ml-4 list-decimal text-xs space-y-0.5">
+                <li>Click "Copy" to copy the improved schema JSON</li>
+                <li>Open <code className="bg-blue-100 px-1 rounded">server/defaultSchemas.ts</code></li>
+                <li>Replace the schema for this section</li>
+                <li>Deploy changes to make it the new default</li>
+              </ol>
+            </div>
+          </div>
+        </div>
         
         {/* Validation Results */}
         {validationResult && (

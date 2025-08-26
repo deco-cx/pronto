@@ -1,5 +1,7 @@
 # Pronto - AI-Powered Idea Expansion Platform
 
+> **🧪 Concept Application** - This is a proof-of-concept showcasing advanced schema-driven AI architecture with real-time editing capabilities.
+
 Transform simple software ideas into comprehensive development plans with AI. Built on the Deco MCP platform with a modern React + Tailwind CSS frontend.
 
 <img width="1502" height="846" alt="Image" src="https://github.com/user-attachments/assets/e1ddac77-8b11-4db0-a3c3-88f8ee06ece3" />
@@ -12,6 +14,13 @@ prompts that were used to code this repo. You can inspect the complete
 development history in the [`.specstory/`](.specstory/) folder.
 
 ## ✨ Features
+
+### 🧪 **Concept Highlights**
+This application demonstrates cutting-edge patterns for AI-driven development:
+- **Schema-Driven Architecture**: Centralized, editable JSON schemas that guide AI generation
+- **Real-Time Schema Editing**: Live preview and validation of AI prompts and structures
+- **Developer Feedback Loop**: Copy improved schemas back to code for continuous improvement
+- **Runtime Schema Injection**: Override default schemas without code changes
 
 ### 🧠 AI-Powered Expansion
 - **Smart Idea Analysis**: Transform simple concepts into comprehensive development plans
@@ -26,9 +35,11 @@ development history in the [`.specstory/`](.specstory/) folder.
 - **Implementation Phases**: Realistic timelines and task breakdowns
 
 ### 🎯 Interactive Experience
-- **Admin Mode**: Edit AI prompts and re-expand individual sections
+- **Enhanced Schema Editor**: Form + JSON editing modes with real-time validation
+- **Preview System**: Test schema changes before applying to database
+- **Admin Mode**: Edit AI prompts and re-expand individual sections with custom schemas
 - **Inline Evaluation**: Multi-criteria assessment (ambiguity, market potential, feasibility, innovation)
-- **Export System**: Copy JSON data or ready-to-use development prompts
+- **Export System**: Copy JSON data, schemas, or ready-to-use development prompts
 - **Real-time Updates**: See changes immediately with optimistic UI updates
 
 ### 🛠️ Technical Stack

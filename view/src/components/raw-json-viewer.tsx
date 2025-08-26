@@ -19,7 +19,14 @@ export function RawJsonViewer({ data, title, className = "" }: RawJsonViewerProp
     try {
       await navigator.clipboard.writeText(jsonString);
       setCopied(true);
-      toast.success("JSON copied to clipboard!");
+      
+      // Show different messages based on what's being copied
+      if (title.toLowerCase().includes('schema')) {
+        toast.success("Schema copied! Paste into server/defaultSchemas.ts to make permanent.");
+      } else {
+        toast.success("JSON copied to clipboard!");
+      }
+      
       setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       toast.error("Failed to copy to clipboard");

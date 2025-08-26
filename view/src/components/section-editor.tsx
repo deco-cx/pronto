@@ -12,6 +12,7 @@ import {
 } from "../hooks/useAdmin";
 import { RawJsonViewer } from "./raw-json-viewer";
 import { SchemaEditor } from "./schema-editor";
+import { SectionDataRenderer } from "./section-data-renderer";
 import { toast } from "sonner";
 
 interface SectionEditorProps {
@@ -94,42 +95,7 @@ export function SectionEditor({
     setPreviewData(null);
   };
 
-  const renderDataPreview = (data: any) => {
-    if (typeof data === 'string') {
-      return <p className="text-gray-700 whitespace-pre-wrap">{data}</p>;
-    }
-    
-    if (Array.isArray(data)) {
-      return (
-        <div className="space-y-3">
-          {data.map((item, index) => (
-            <div key={index} className="border-l-4 border-blue-200 pl-4">
-              {typeof item === 'object' && item.title ? (
-                <>
-                  <h4 className="font-semibold text-gray-800">{item.title}</h4>
-                  <p className="text-gray-600 mt-1">{item.description}</p>
-                  {item.inputSchema && (
-                    <code className="text-xs bg-gray-100 px-2 py-1 rounded mt-1 block">
-                      Input: {item.inputSchema}
-                    </code>
-                  )}
-                  {item.outputSchema && (
-                    <code className="text-xs bg-gray-100 px-2 py-1 rounded mt-1 block">
-                      Output: {item.outputSchema}
-                    </code>
-                  )}
-                </>
-              ) : (
-                <p className="text-gray-700">{JSON.stringify(item, null, 2)}</p>
-              )}
-            </div>
-          ))}
-        </div>
-      );
-    }
-    
-    return <pre className="text-sm bg-gray-100 p-3 rounded overflow-auto">{JSON.stringify(data, null, 2)}</pre>;
-  };
+
 
   if (isLoading) {
     return (
@@ -182,11 +148,27 @@ export function SectionEditor({
         
         <CardContent className="space-y-6 overflow-y-auto max-h-[calc(90vh-120px)]">
           {/* Current Data Display */}
-          <RawJsonViewer 
-            data={editableData.currentData} 
-            title="Current Raw Data"
-            className="bg-orange-50 border-orange-200"
-          />
+          <Card className="bg-orange-50 border-orange-200">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-medium flex items-center justify-between">
+                Current Data
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigator.clipboard.writeText(JSON.stringify(editableData.currentData, null, 2))}
+                  className="h-8 w-8 p-0"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <SectionDataRenderer 
+                sectionKey={sectionKey}
+                data={editableData.currentData}
+              />
+            </CardContent>
+          </Card>
 
           {/* Schema Configuration */}
           {currentSchema && (
@@ -251,18 +233,50 @@ export function SectionEditor({
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Current Data */}
-                <RawJsonViewer 
-                  data={editableData.currentData} 
-                  title="Current Data"
-                  className="bg-orange-50 border-orange-200"
-                />
+                <Card className="bg-orange-50 border-orange-200">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium flex items-center justify-between">
+                      Current Data
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigator.clipboard.writeText(JSON.stringify(editableData.currentData, null, 2))}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="max-h-64 overflow-y-auto">
+                    <SectionDataRenderer 
+                      sectionKey={sectionKey}
+                      data={editableData.currentData}
+                    />
+                  </CardContent>
+                </Card>
                 
                 {/* New Data */}
-                <RawJsonViewer 
-                  data={previewData} 
-                  title="New Data (Preview)"
-                  className="bg-green-50 border-green-200"
-                />
+                <Card className="bg-green-50 border-green-200">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium flex items-center justify-between">
+                      New Data (Preview)
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => navigator.clipboard.writeText(JSON.stringify(previewData, null, 2))}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Copy className="w-4 h-4" />
+                      </Button>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="max-h-64 overflow-y-auto">
+                    <SectionDataRenderer 
+                      sectionKey={sectionKey}
+                      data={previewData}
+                    />
+                  </CardContent>
+                </Card>
               </div>
 
               {/* Schema Used */}
@@ -279,10 +293,15 @@ export function SectionEditor({
                   <AlertCircle className="w-4 h-4 text-yellow-600" />
                   <h4 className="font-medium text-yellow-800">Confirm Changes</h4>
                 </div>
-                <p className="text-sm text-yellow-700">
+                <p className="text-sm text-yellow-700 mb-2">
                   Review the changes above. Once you apply them, the current data will be replaced with the new data. 
-                  This action cannot be undone. You can copy the schema JSON to use in your code.
+                  This action cannot be undone.
                 </p>
+                <div className="bg-yellow-100 border border-yellow-300 rounded p-2 text-xs text-yellow-800">
+                  <strong>⚠️ Temporary Workaround:</strong> Schema changes are not automatically saved. 
+                  To make your improved schema permanent, copy the "Schema Used for Generation" JSON above 
+                  and paste it into <code className="bg-yellow-200 px-1 rounded">server/defaultSchemas.ts</code>.
+                </div>
               </div>
             </div>
           )}

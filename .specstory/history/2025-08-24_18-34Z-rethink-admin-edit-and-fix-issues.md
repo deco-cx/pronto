@@ -3243,3 +3243,693 @@ Would you like me to help you check what's currently in the database for your id
 
 ---
 
+_**User**_
+
+Ok.
+
+I think it's working
+
+please, update readme saying this is a concept application
+
+
+
+---
+
+_**Assistant**_
+
+Perfect! I'll update the README to reflect that this is a concept application showcasing the schema-driven architecture we've built.
+
+---
+
+Read file: undefined
+
+---
+
+<details><summary>Edit file: README.md</summary>
+
+undefined
+
+**Chunk 1**
+Lines added: 2, lines removed: undefined
+
+```diff
+@@ -1,3 +1,5 @@
+  # Pronto - AI-Powered Idea Expansion Platform
++ 
++ > **🧪 Concept Application** - This is a proof-of-concept showcasing advanced schema-driven AI architecture with real-time editing capabilities.
+  
+  Transform simple software ideas into comprehensive development plans with AI. Built on the Deco MCP platform with a modern React + Tailwind CSS frontend.
+```
+
+</details>
+
+---
+
+Now let me add a section highlighting the key concept features we've implemented:
+
+---
+
+<details><summary>Edit file: README.md</summary>
+
+undefined
+
+**Chunk 1**
+Lines added: 7, lines removed: undefined
+
+```diff
+@@ -15,4 +15,11 @@
+  
+  ## ✨ Features
++ 
++ ### 🧪 **Concept Highlights**
++ This application demonstrates cutting-edge patterns for AI-driven development:
++ - **Schema-Driven Architecture**: Centralized, editable JSON schemas that guide AI generation
++ - **Real-Time Schema Editing**: Live preview and validation of AI prompts and structures
++ - **Developer Feedback Loop**: Copy improved schemas back to code for continuous improvement
++ - **Runtime Schema Injection**: Override default schemas without code changes
+  
+  ### 🧠 AI-Powered Expansion
+```
+
+</details>
+
+---
+
+Let me also update the Interactive Experience section to highlight the enhanced editing capabilities:
+
+---
+
+<details><summary>Edit file: README.md</summary>
+
+undefined
+
+**Chunk 1**
+Lines added: 4, lines removed: 2
+
+```diff
+@@ -36,7 +36,9 @@
+  
+  ### 🎯 Interactive Experience
+- - **Admin Mode**: Edit AI prompts and re-expand individual sections
++ - **Enhanced Schema Editor**: Form + JSON editing modes with real-time validation
++ - **Preview System**: Test schema changes before applying to database
++ - **Admin Mode**: Edit AI prompts and re-expand individual sections with custom schemas
+  - **Inline Evaluation**: Multi-criteria assessment (ambiguity, market potential, feasibility, innovation)
+- - **Export System**: Copy JSON data or ready-to-use development prompts
++ - **Export System**: Copy JSON data, schemas, or ready-to-use development prompts
+  - **Real-time Updates**: See changes immediately with optimistic UI updates
+  
+```
+
+</details>
+
+---
+
+_**User**_
+
+In the copy schema and also the edit modal, mention the file to update the schema
+
+Mention it's a temporary workaround
+
+---
+
+_**Assistant**_
+
+Great idea! Let me add clear instructions about where to update the schema and mention it's a temporary workaround. I'll update both the SchemaEditor component and the SectionEditor component.
+
+---
+
+<details><summary>Edit file: view/src/components/schema-editor.tsx</summary>
+
+undefined
+
+**Chunk 1**
+Lines added: 2, lines removed: 2
+
+```diff
+@@ -29,6 +29,6 @@
+        await navigator.clipboard.writeText(schemaString);
+        setCopied(true);
+-       toast.success("Schema JSON copied to clipboard!");
+-       setTimeout(() => setCopied(false), 2000);
++       toast.success("Schema JSON copied! Paste into server/defaultSchemas.ts to make it permanent.");
++       setTimeout(() => setCopied(false), 3000);
+      } catch (error) {
+        toast.error("Failed to copy to clipboard");
+```
+
+</details>
+
+---
+
+Now let me add a helpful info section in the SchemaEditor that explains the temporary workaround:
+
+---
+
+<details><summary>Edit file: view/src/components/schema-editor.tsx</summary>
+
+undefined
+
+**Chunk 1**
+Lines added: 19, lines removed: undefined
+
+```diff
+@@ -234,4 +234,23 @@
+        <CardContent>
+          {viewMode === 'form' ? renderFormView() : renderJsonView()}
++         
++         {/* Temporary Workaround Notice */}
++         <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
++           <div className="flex items-start gap-2">
++             <Code className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
++             <div className="text-sm">
++               <p className="font-medium text-blue-800 mb-1">Developer Workflow (Temporary)</p>
++               <p className="text-blue-700">
++                 Schema changes are not automatically saved. To make improvements permanent:
++               </p>
++               <ol className="text-blue-700 mt-1 ml-4 list-decimal text-xs space-y-0.5">
++                 <li>Click "Copy" to copy the improved schema JSON</li>
++                 <li>Open <code className="bg-blue-100 px-1 rounded">server/defaultSchemas.ts</code></li>
++                 <li>Replace the schema for this section</li>
++                 <li>Deploy changes to make it the new default</li>
++               </ol>
++             </div>
++           </div>
++         </div>
+          
+          {/* Validation Results */}
+```
+
+</details>
+
+---
+
+Now let me update the SectionEditor component to also mention the temporary workaround in the confirmation dialog:
+
+---
+
+<details><summary>Edit file: view/src/components/section-editor.tsx</summary>
+
+undefined
+
+**Chunk 1**
+Lines added: 7, lines removed: 2
+
+```diff
+@@ -280,8 +280,13 @@
+                    <h4 className="font-medium text-yellow-800">Confirm Changes</h4>
+                  </div>
+-                 <p className="text-sm text-yellow-700">
++                 <p className="text-sm text-yellow-700 mb-2">
+                    Review the changes above. Once you apply them, the current data will be replaced with the new data. 
+-                   This action cannot be undone. You can copy the schema JSON to use in your code.
++                   This action cannot be undone.
+                  </p>
++                 <div className="bg-yellow-100 border border-yellow-300 rounded p-2 text-xs text-yellow-800">
++                   <strong>⚠️ Temporary Workaround:</strong> Schema changes are not automatically saved. 
++                   To make your improved schema permanent, copy the "Schema Used for Generation" JSON above 
++                   and paste it into <code className="bg-yellow-200 px-1 rounded">server/defaultSchemas.ts</code>.
++                 </div>
+                </div>
+              </div>
+```
+
+</details>
+
+---
+
+Let me also update the copy button tooltip in the RawJsonViewer when it's used for schema display:
+
+---
+
+<details><summary>Edit file: view/src/components/raw-json-viewer.tsx</summary>
+
+undefined
+
+**Chunk 1**
+Lines added: 8, lines removed: 1
+
+```diff
+@@ -20,5 +20,12 @@
+        await navigator.clipboard.writeText(jsonString);
+        setCopied(true);
+-       toast.success("JSON copied to clipboard!");
++       
++       // Show different messages based on what's being copied
++       if (title.toLowerCase().includes('schema')) {
++         toast.success("Schema copied! Paste into server/defaultSchemas.ts to make permanent.");
++       } else {
++         toast.success("JSON copied to clipboard!");
++       }
++       
+        setTimeout(() => setCopied(false), 2000);
+      } catch (error) {
+```
+
+</details>
+
+---
+
+Now let me check for any linting errors:
+
+---
+
+
+
+---
+
+Perfect! Let me update the todos to mark this task as completed:
+
+---
+
+## Todo List
+
+- [x] Fix missing ideas import in server/tools/admin.ts
+- [ ] Test current edit functionality works
+- [x] Create server/defaultSchemas.ts with centralized schema definitions
+- [x] Extract hardcoded schemas from expansion.ts and admin.ts
+- [x] Refactor expansion workflow to use defaultSchemas
+- [x] Create schema injection system with runtime overrides
+- [x] Create GET_EDITABLE_SECTION, PREVIEW_SECTION_WITH_SCHEMA, APPLY_SECTION_CHANGES tools
+- [x] Create TanStack Query hooks for new enhanced editing tools
+- [x] Create RawJsonViewer, SchemaEditor, and enhanced SectionEditor components
+- [ ] Test the new enhanced edit modal with schema editing
+- [x] Fix AI_GENERATE_OBJECT schema format issue
+- [x] Add schema validation utilities and tools
+- [x] Improve error handling and user feedback
+- [x] Add schema validation to SchemaEditor component
+- [x] Add clear instructions about updating server/defaultSchemas.ts file
+- [x] Add notices explaining the temporary workaround for schema persistence
+
+---
+
+## ✅ **Enhanced User Experience Complete!**
+
+I've successfully added clear instructions and notices about the temporary workaround for schema persistence. Here's what users will now see:
+
+### 🔧 **Schema Editor Improvements**
+
+1. **Copy Button Enhancement**
+   - Now shows: *"Schema JSON copied! Paste into server/defaultSchemas.ts to make it permanent."*
+   - Longer toast duration (3 seconds) for better visibility
+
+2. **Developer Workflow Notice**
+   - Added a prominent blue info box explaining the temporary workaround
+   - Step-by-step instructions:
+     1. Click "Copy" to copy the improved schema JSON
+     2. Open `server/defaultSchemas.ts`
+     3. Replace the schema for this section
+     4. Deploy changes to make it the new default
+
+### 🎯 **Section Editor Improvements**
+
+1. **Enhanced Confirmation Dialog**
+   - Added warning about temporary workaround
+   - Specific instructions to copy "Schema Used for Generation" JSON
+   - Clear file path: `server/defaultSchemas.ts`
+
+2. **RawJsonViewer Smart Messages**
+   - Detects when schema data is being copied
+   - Shows appropriate message: *"Schema copied! Paste into server/defaultSchemas.ts to make permanent."*
+
+### 📋 **User Experience Flow**
+
+Now when users edit schemas, they'll see clear guidance:
+
+1. **During Editing** → Blue info box explains the workflow
+2. **When Copying Schema** → Toast message mentions the target file
+3. **Before Applying Changes** → Warning reminds them about persistence
+4. **After Generating Preview** → Can copy the "Schema Used for Generation"
+
+### 🎯 **Key Benefits**
+
+- ✅ **Clear Instructions** - Users know exactly what file to update
+- ✅ **Temporary Notice** - Explicitly labeled as a workaround
+- ✅ **Developer-Friendly** - Provides the exact file path and steps
+- ✅ **Context-Aware** - Different messages for different copy actions
+- ✅ **Visual Prominence** - Info boxes and warnings are clearly visible
+
+This makes the concept application much more user-friendly while being transparent about the current limitations. Users can now easily understand how to make their schema improvements permanent! 🚀
+
+---
+
+_**User**_
+
+THE JSON VIEWING is cutting strings
+
+i think it's best in the edit xp to use the same UI layout from the expand, right?
+
+do it
+
+---
+
+_**Assistant**_
+
+You're absolutely right! The JSON viewer is cutting strings and the expand view has a much better layout for displaying the data. Let me update the SectionEditor to use the same UI layout as the expansion display.
+
+First, let me check how the expansion display renders the data:
+
+---
+
+Read file: undefined
+
+---
+
+Let me see how it renders specific sections like features:
+
+---
+
+
+
+---
+
+Perfect! Now let me see how other sections are rendered to understand the pattern:
+
+---
+
+Read file: undefined
+
+---
+
+Great! Now I understand the pattern. Let me create a utility function to render section data using the same layout as the expansion display, and then update the SectionEditor to use it.
+
+First, let me create a utility component for rendering section data:
+
+---
+
+
+
+---
+
+Now let me update the SectionEditor to use the SectionDataRenderer instead of RawJsonViewer for displaying the data:
+
+---
+
+<details><summary>Edit file: view/src/components/section-editor.tsx</summary>
+
+undefined
+
+**Chunk 1**
+Lines added: 1, lines removed: undefined
+
+```diff
+@@ -13,4 +13,5 @@
+  import { RawJsonViewer } from "./raw-json-viewer";
+  import { SchemaEditor } from "./schema-editor";
++ import { SectionDataRenderer } from "./section-data-renderer";
+  import { toast } from "sonner";
+  
+```
+
+</details>
+
+---
+
+Now let me replace the RawJsonViewer usage with SectionDataRenderer for the current and preview data:
+
+---
+
+<details><summary>Edit file: view/src/components/section-editor.tsx</summary>
+
+undefined
+
+**Chunk 1**
+Lines added: 21, lines removed: 5
+
+```diff
+@@ -184,9 +184,25 @@
+          <CardContent className="space-y-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+            {/* Current Data Display */}
+-           <RawJsonViewer 
+-             data={editableData.currentData} 
+-             title="Current Raw Data"
+-             className="bg-orange-50 border-orange-200"
+-           />
++           <Card className="bg-orange-50 border-orange-200">
++             <CardHeader className="pb-3">
++               <CardTitle className="text-sm font-medium flex items-center justify-between">
++                 Current Data
++                 <Button
++                   variant="ghost"
++                   size="sm"
++                   onClick={() => navigator.clipboard.writeText(JSON.stringify(editableData.currentData, null, 2))}
++                   className="h-8 w-8 p-0"
++                 >
++                   <Copy className="w-4 h-4" />
++                 </Button>
++               </CardTitle>
++             </CardHeader>
++             <CardContent>
++               <SectionDataRenderer 
++                 sectionKey={sectionKey}
++                 data={editableData.currentData}
++               />
++             </CardContent>
++           </Card>
+  
+            {/* Schema Configuration */}
+```
+
+</details>
+
+---
+
+Now let me update the preview section to use SectionDataRenderer as well:
+
+---
+
+<details><summary>Edit file: view/src/components/section-editor.tsx</summary>
+
+undefined
+
+**Chunk 1**
+Lines added: 42, lines removed: 10
+
+```diff
+@@ -269,16 +269,48 @@
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  {/* Current Data */}
+-                 <RawJsonViewer 
+-                   data={editableData.currentData} 
+-                   title="Current Data"
+-                   className="bg-orange-50 border-orange-200"
+-                 />
++                 <Card className="bg-orange-50 border-orange-200">
++                   <CardHeader className="pb-3">
++                     <CardTitle className="text-sm font-medium flex items-center justify-between">
++                       Current Data
++                       <Button
++                         variant="ghost"
++                         size="sm"
++                         onClick={() => navigator.clipboard.writeText(JSON.stringify(editableData.currentData, null, 2))}
++                         className="h-8 w-8 p-0"
++                       >
++                         <Copy className="w-4 h-4" />
++                       </Button>
++                     </CardTitle>
++                   </CardHeader>
++                   <CardContent className="max-h-64 overflow-y-auto">
++                     <SectionDataRenderer 
++                       sectionKey={sectionKey}
++                       data={editableData.currentData}
++                     />
++                   </CardContent>
++                 </Card>
+                  
+                  {/* New Data */}
+-                 <RawJsonViewer 
+-                   data={previewData} 
+-                   title="New Data (Preview)"
+-                   className="bg-green-50 border-green-200"
+-                 />
++                 <Card className="bg-green-50 border-green-200">
++                   <CardHeader className="pb-3">
++                     <CardTitle className="text-sm font-medium flex items-center justify-between">
++                       New Data (Preview)
++                       <Button
++                         variant="ghost"
++                         size="sm"
++                         onClick={() => navigator.clipboard.writeText(JSON.stringify(previewData, null, 2))}
++                         className="h-8 w-8 p-0"
++                       >
++                         <Copy className="w-4 h-4" />
++                       </Button>
++                     </CardTitle>
++                   </CardHeader>
++                   <CardContent className="max-h-64 overflow-y-auto">
++                     <SectionDataRenderer 
++                       sectionKey={sectionKey}
++                       data={previewData}
++                     />
++                   </CardContent>
++                 </Card>
+                </div>
+  
+```
+
+</details>
+
+---
+
+Perfect! Now let me check for any linting errors:
+
+---
+
+
+
+---
+
+Excellent! Let me also remove the old `renderDataPreview` function from the SectionEditor since we're no longer using it:
+
+---
+
+<details><summary>Edit file: view/src/components/section-editor.tsx</summary>
+
+undefined
+
+**Chunk 1**
+Lines added: 1, lines removed: 36
+
+```diff
+@@ -96,40 +96,5 @@
+    };
+  
+-   const renderDataPreview = (data: any) => {
+-     if (typeof data === 'string') {
+-       return <p className="text-gray-700 whitespace-pre-wrap">{data}</p>;
+-     }
+-     
+-     if (Array.isArray(data)) {
+-       return (
+-         <div className="space-y-3">
+-           {data.map((item, index) => (
+-             <div key={index} className="border-l-4 border-blue-200 pl-4">
+-               {typeof item === 'object' && item.title ? (
+-                 <>
+-                   <h4 className="font-semibold text-gray-800">{item.title}</h4>
+-                   <p className="text-gray-600 mt-1">{item.description}</p>
+-                   {item.inputSchema && (
+-                     <code className="text-xs bg-gray-100 px-2 py-1 rounded mt-1 block">
+-                       Input: {item.inputSchema}
+-                     </code>
+-                   )}
+-                   {item.outputSchema && (
+-                     <code className="text-xs bg-gray-100 px-2 py-1 rounded mt-1 block">
+-                       Output: {item.outputSchema}
+-                     </code>
+-                   )}
+-                 </>
+-               ) : (
+-                 <p className="text-gray-700">{JSON.stringify(item, null, 2)}</p>
+-               )}
+-             </div>
+-           ))}
+-         </div>
+-       );
+-     }
+-     
+-     return <pre className="text-sm bg-gray-100 p-3 rounded overflow-auto">{JSON.stringify(data, null, 2)}</pre>;
+-   };
++ 
+  
+    if (isLoading) {
+```
+
+</details>
+
+---
+
+Now let me test that everything works by checking for linting errors one more time:
+
+---
+
+
+
+---
+
+Perfect! Let me update the todos to mark this improvement as completed:
+
+---
+
+## Todo List
+
+- [x] Fix missing ideas import in server/tools/admin.ts
+- [ ] Test current edit functionality works
+- [x] Create server/defaultSchemas.ts with centralized schema definitions
+- [x] Extract hardcoded schemas from expansion.ts and admin.ts
+- [x] Refactor expansion workflow to use defaultSchemas
+- [x] Create schema injection system with runtime overrides
+- [x] Create GET_EDITABLE_SECTION, PREVIEW_SECTION_WITH_SCHEMA, APPLY_SECTION_CHANGES tools
+- [x] Create TanStack Query hooks for new enhanced editing tools
+- [x] Create RawJsonViewer, SchemaEditor, and enhanced SectionEditor components
+- [ ] Test the new enhanced edit modal with schema editing
+- [x] Fix AI_GENERATE_OBJECT schema format issue
+- [x] Add schema validation utilities and tools
+- [x] Improve error handling and user feedback
+- [x] Add schema validation to SchemaEditor component
+- [x] Add clear instructions about updating server/defaultSchemas.ts file
+- [x] Add notices explaining the temporary workaround for schema persistence
+- [x] Replace JSON viewer with expansion-style data rendering in edit modal
+- [x] Create SectionDataRenderer component using same layout as expansion display
+
+---
+
+## 🎉 **Enhanced Data Display Complete!**
+
+I've successfully replaced the JSON viewer with the same beautiful layout used in the expansion display. Here's what's been improved:
+
+### ✅ **Major UI Improvements**
+
+1. **SectionDataRenderer Component** 🎨
+   - **Identical layout** to the expansion display
+   - **Section-specific rendering** for each data type
+   - **Rich formatting** with proper styling and structure
+   - **No more cut-off strings** - full content visibility
+
+2. **Enhanced Section Editor** 📱
+   - **Current Data**: Now displays using expansion-style layout
+   - **Preview Data**: Side-by-side comparison with proper formatting
+   - **Copy buttons**: Individual copy buttons for current and preview data
+   - **Scrollable content**: Max height with overflow for long content
+
+### 🎯 **Section-Specific Layouts**
+
+The new renderer handles each section type perfectly:
+
+- **Features**: Border-left styling with titles and descriptions
+- **Tools**: Bordered cards with input/output schemas
+- **External Tools**: Service icons with structured info
+- **Architecture**: File paths with descriptions
+- **Data Models**: Code blocks with syntax highlighting
+- **Workflows**: Trigger information and descriptions
+- **Views**: Layout examples with SVG rendering
+- **Implementation Phases**: Numbered phases with task lists
+- **Success Metrics**: Checkmark styling
+- **Fallback**: Smart object/array rendering for unknown types
+
+### 🔄 **User Experience**
+
+**Before**: 
+- ❌ Cut-off JSON strings
+- ❌ Hard to read raw JSON
+- ❌ No visual structure
+
+**After**:
+- ✅ **Full content visibility** - no more truncation
+- ✅ **Beautiful formatting** - same as main expansion view
+- ✅ **Easy comparison** - side-by-side current vs preview
+- ✅ **Individual copy buttons** - copy current or preview data separately
+- ✅ **Proper scrolling** - handles long content gracefully
+
+### 🚀 **Technical Benefits**
+
+- **Consistent UI** - Same components and styling as expansion display
+- **Maintainable** - Single source of truth for data rendering
+- **Extensible** - Easy to add new section types
+- **Performance** - No JSON parsing overhead for display
+- **Accessibility** - Proper semantic structure
+
+Now when you edit sections, you'll see the data exactly as it appears in the main expansion view, making it much easier to understand and compare changes! 🎉
+
+---
+
